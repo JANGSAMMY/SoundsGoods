@@ -10,10 +10,11 @@
         line-height: 1;
         margin-bottom: vw(20);
         img {
-            width: vw(34);
-            height: vw(34);
-            margin-left: vw(20);
-            margin-top: vw(3);
+            width: vw(40px);
+            height: vw(40px);
+            margin-left: vw(14px);
+            object-fit: cover;
+            vertical-align: top;
         }
     }
     .genre-sub {
@@ -21,16 +22,30 @@
         flex-wrap: wrap;
         justify-content: space-between;
         li {
-            cursor: pointer;
-            margin-bottom: vw(20);
+            margin-bottom: vw(30);
             .genre-sub-img {
                 position: relative;
                 display: inline-block;
+                overflow: hidden;
                 transition: transform 0.3s;
                 img {
                     border-radius: vw(10);
                     width: vw(337);
+                    height: vw(192.869);
                     display: block;
+                    object-fit: cover;
+                }
+                &::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.4);
+                    border-radius: vw(10);
+                    opacity: 0;
+                    transition: opacity 0.3s; // <-- 여기!
                 }
                 span {
                     font-family: 'Bricolage Grotesque', 'pretendard';
@@ -41,7 +56,17 @@
                     opacity: 0;
                     transition: opacity 0.3s;
                     color: $fff !important;
+                    z-index: 1;
                     @include font-40px-800();
+                }
+                &:hover {
+                    transform: translateY(vw(20));
+                    &::after {
+                        opacity: 1;
+                    }
+                    span {
+                        opacity: 1;
+                    }
                 }
             }
             p {

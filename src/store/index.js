@@ -265,6 +265,8 @@ export const useGoodsStore = create((set, get) => {
         goods: localStorage.getItem('goods')
             ? JSON.parse(localStorage.getItem('goods'))
             : goodsData,
+
+        cart: localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [],
         iveGoods: localStorage.getItem('iveGoods')
             ? JSON.parse(localStorage.getItem('iveGoods'))
             : [],
@@ -274,17 +276,175 @@ export const useGoodsStore = create((set, get) => {
         goodsMain2: localStorage.getItem('goodsMain2')
             ? JSON.parse(localStorage.getItem('goodsMain2'))
             : [],
+
+        wish: localStorage.getItem('wish') ? JSON.parse(localStorage.getItem('wish')) : [],
+
+        // 상태로 변경
+        itemTotal: 0,
+        paymentTotal: 0,
+        cartItemCount: 0,
+        updateTotals: () => {
+            const { cart } = get();
+            const newItemTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const newCartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            set({
+                itemTotal: newItemTotal,
+                paymentTotal: newItemTotal + 3000,
+                cartItemCount: newCartItemCount,
+            });
+        },
         shuffl: () => {
             const { goods } = get();
-            const limitData = goodsData.sort(() => Math.random() - 0.5).slice(0, 5);
+            const limitData = [...goods].sort(() => Math.random() - 0.5).slice(0, 5);
             localStorage.setItem('goodsMain', JSON.stringify(limitData));
-            const limitData2 = goodsData.sort(() => Math.random() - 0.5).slice(0, 5);
+            const limitData2 = [...goods].sort(() => Math.random() - 0.5).slice(0, 5);
             localStorage.setItem('goodsMain2', JSON.stringify(limitData2));
-            const limitData3 = goodsData.sort(() => Math.random() - 0.5).slice(0, 6);
+            const limitData3 = [...goods].sort(() => Math.random() - 0.5).slice(0, 6);
             localStorage.setItem('iveGoods', JSON.stringify(limitData3));
             set({ goodsMain: limitData, goodsMain2: limitData2, iveGoods: limitData3 });
         },
 
+        cartPush: (x, quantity = 1) => {
+            const { goods, cart } = get();
+            const id = x.id;
+            const currentGoodsItem = goods.find((item) => item.id === id);
+
+            if (!currentGoodsItem) return;
+
+            // 디버깅: 현재 goods 항목 확인
+            console.log('Current goods item:', currentGoodsItem);
+            console.log('Quantity in goods:', currentGoodsItem.quantity);
+
+            const existingCartItemIndex = cart.findIndex((cartItem) => cartItem.id === id);
+
+            if (existingCartItemIndex !== -1) {
+                // 장바구니에 이미 있는 경우
+                const updatedCart = [...cart];
+                const existingItem = updatedCart[existingCartItemIndex];
+
+                // 디버깅: 기존 장바구니 항목 확인
+                console.log('Existing cart item:', existingItem);
+
+                // goods의 quantity를 사용하여 증가
+                const newQuantity = existingItem.quantity + currentGoodsItem.quantity;
+
+                updatedCart[existingCartItemIndex] = {
+                    ...existingItem,
+                    quantity: newQuantity,
+                    itemtotal: existingItem.price * newQuantity,
+                    totalPrice: existingItem.price * newQuantity,
+                };
+
+                localStorage.setItem('cart', JSON.stringify(updatedCart));
+                set({ cart: updatedCart });
+
+                // 디버깅: 업데이트 후 확인
+                console.log('Updated quantity:', newQuantity);
+            } else {
+                // 장바구니에 없는 경우 - goods의 quantity를 사용
+                const newCartItem = {
+                    ...currentGoodsItem,
+                    quantity: currentGoodsItem.quantity, // goods의 quantity 사용
+                    itemtotal: currentGoodsItem.price * currentGoodsItem.quantity,
+                    totalPrice: currentGoodsItem.price * currentGoodsItem.quantity,
+                };
+
+                const newCart = [...cart, newCartItem];
+                localStorage.setItem('cart', JSON.stringify(newCart));
+                set({ cart: newCart });
+
+                // 디버깅: 새로 추가된 항목 확인
+                console.log('New cart item:', newCartItem);
+            }
+
+            // totals 업데이트 호출 추가
+            get().updateTotals();
+        },
+        delCart: (x) => {
+            const { cart } = get();
+            const del = cart.filter((item) => item.id !== x);
+            localStorage.setItem('cart', JSON.stringify(del));
+            set({ cart: del });
+        },
+        upCountGoods: (x) => {
+            const { goods } = get();
+            const id = x;
+            const item = goods.map((item) =>
+                item.id === id
+                    ? {
+                          ...item,
+                          quantity: item.quantity + 1,
+                          itemtotal: item.price * (item.quantity + 1), // itemtotal 업데이트
+                          totalPrice: item.price * (item.quantity + 1),
+                      }
+                    : item
+            );
+
+            set({ goods: item });
+        },
+        upCount: (x) => {
+            const { cart } = get();
+            const id = x;
+            const item = cart.map((item) =>
+                item.id === id
+                    ? {
+                          ...item,
+                          quantity: item.quantity + 1,
+                          itemtotal: item.price * (item.quantity + 1), // itemtotal 업데이트
+                          totalPrice: item.price * (item.quantity + 1),
+                      }
+                    : item
+            );
+            localStorage.setItem('cart', JSON.stringify(item));
+            set({ cart: item });
+        },
+        downCountGoods: (id) => {
+            const { goods } = get();
+            const itemIndex = goods.findIndex((goodsItem) => goodsItem.id === id);
+
+            if (itemIndex !== -1) {
+                const updatedGoods = [...goods];
+                const item = updatedGoods[itemIndex];
+
+                if (item.quantity > 1) {
+                    updatedGoods[itemIndex] = {
+                        ...item,
+                        quantity: item.quantity - 1,
+                        itemtotal: item.price * (item.quantity - 1), // itemtotal 업데이트
+                        totalPrice: item.price * (item.quantity - 1),
+                    };
+
+                    set({ goods: updatedGoods });
+                }
+            }
+        },
+        downCount: (id) => {
+            const { cart } = get();
+            const itemIndex = cart.findIndex((cartItem) => cartItem.id === id);
+
+            if (itemIndex !== -1) {
+                const updatedCart = [...cart];
+                const item = updatedCart[itemIndex];
+
+                if (item.quantity > 1) {
+                    updatedCart[itemIndex] = {
+                        ...item,
+                        quantity: item.quantity - 1,
+                        itemtotal: item.price * (item.quantity - 1), // itemtotal 업데이트
+                        totalPrice: item.price * (item.quantity - 1),
+                    };
+                    localStorage.setItem('cart', JSON.stringify(updatedCart));
+                    set({ cart: updatedCart });
+                }
+            }
+        },
+        totalCart: (x) => {
+            const { cart } = get();
+            const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            localStorage.setItem('cart', JSON.stringify(total));
+            set({ itemTotal: total });
+        },
         isLike: (id) =>
             set((state) => {
                 const newGoods = state.goods.map((item) =>

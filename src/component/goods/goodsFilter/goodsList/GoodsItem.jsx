@@ -1,6 +1,8 @@
 import React from 'react';
 import { GoPlus } from 'react-icons/go';
 import { LuMinus } from 'react-icons/lu';
+import { useGoodsStore } from '../../../../store';
+import { useNavigate } from 'react-router-dom';
 const GoodsItem = ({ goods }) => {
     const {
         id,
@@ -19,13 +21,19 @@ const GoodsItem = ({ goods }) => {
         chk,
         bookmark,
         count,
+        totalPrice,
     } = goods;
+    const { cartPush, downCountGoods, upCountGoods } = useGoodsStore();
+    const nav = useNavigate();
+    const onNext = () => {
+        nav(`/goods/${id}`);
+    };
     return (
         <li className="goods_li">
-            <div className="pic">
+            <div className="pic" onClick={onNext}>
                 <img src={imageM} alt="" />
             </div>
-            <div className="goods_text_box_li">
+            <div className="goods_text_box_li" onClick={onNext}>
                 <h3>{title}</h3>
                 <div className="con1">
                     <ul className="artist_ganre">
@@ -51,20 +59,20 @@ const GoodsItem = ({ goods }) => {
                 <p className="limit_start">예약 판매 9/5 발송 예정</p>
             </div>
             <div className="quantity_count">
-                <button className="down">
+                <button className="down" onClick={() => downCountGoods(id)}>
                     <i>
                         <LuMinus />
                     </i>
                 </button>
                 <p className="quantity">{quantity}</p>
-                <button className="up">
+                <button className="up" onClick={() => upCountGoods(id)}>
                     <i>
                         <GoPlus />
                     </i>
                 </button>
             </div>
             <div className="goods_btns">
-                <div className="btn1">
+                <div className="btn1" onClick={() => cartPush(goods)}>
                     <button>
                         <img src="images/icons/white_next.png" alt="" />
                     </button>
