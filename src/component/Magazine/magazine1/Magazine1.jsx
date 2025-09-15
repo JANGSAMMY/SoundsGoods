@@ -45,7 +45,11 @@ const Magazine1 = () => {
                             </p>
                         </li>
                         <li>
-                            <img src="./images/magazine/magazine02.jpg" alt="제니" />
+                            <img
+                                src="./images/magazine/magazine02.jpg"
+                                alt="제니"
+                                style={{ width: 340 }}
+                            />
                             <div className="mg-title">
                                 <h3>제니</h3>
                                 <span>댓글 96 | 조회 1,872</span>
